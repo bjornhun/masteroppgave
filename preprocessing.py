@@ -20,9 +20,9 @@ def get_subsample(positives, negatives, n_pos, n_neg):
     subsample = []
 
     for i in range(n_pos):
-        subsample.append((positives.pop(), 1))
+        subsample.append((positives.pop(0), 1))
     for i in range(n_neg):
-        subsample.append((negatives.pop(), 0))
+        subsample.append((negatives.pop(0), 0))
 
     return positives, negatives, subsample
 
