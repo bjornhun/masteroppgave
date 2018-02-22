@@ -50,8 +50,18 @@ def get_data_paths(neg_per_pos=1, test_ratio=.1, val_ratio=.1):
     negatives = get_negatives(len(positives) * neg_per_pos)
     return train_test_val_split(positives, negatives, test_ratio, val_ratio)
 
+def set_length(x, cutoff):
+    num_samples = len(x)
+    if num_samples > cutoff:
+        return x[:cutoff]
+    else:
+        zeros = cutoff - num_samples
+        return np.append(x, [0]*zeros)
+
 def read_wav(path):
     fs, x = wavfile.read(data_path + path)
+    if len(x) != fs:
+        x = set_length(x, fs)
     return x
 
 def normalize(coeff):
