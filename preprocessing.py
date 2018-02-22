@@ -1,5 +1,9 @@
 import os
 import random
+from scipy.io import wavfile
+from python_speech_features import mfcc
+import numpy as np
+import pickle
 
 wakeword = "seven"
 data_path = "data/"
@@ -20,9 +24,9 @@ def get_subsample(positives, negatives, n_pos, n_neg):
     subsample = []
 
     for i in range(n_pos):
-        subsample.append((positives.pop(0), 1))
+        subsample.append(positives.pop(0))
     for i in range(n_neg):
-        subsample.append((negatives.pop(0), 0))
+        subsample.append(negatives.pop(0))
 
     return positives, negatives, subsample
 
@@ -41,10 +45,47 @@ def train_test_val_split(positives, negatives, test_ratio, val_ratio):
 
     return train, test, val
 
-def preprocess(neg_per_pos=1, test_ratio=.1, val_ratio=.1, noise_ratio=.5):
+def get_data_paths(neg_per_pos=1, test_ratio=.1, val_ratio=.1):
     positives = get_positives(wakeword)
     negatives = get_negatives(len(positives) * neg_per_pos)
-    train, test, val = train_test_val_split(positives, negatives, test_ratio, val_ratio)
+    return train_test_val_split(positives, negatives, test_ratio, val_ratio)
+
+def read_wav(path):
+    fs, x = wavfile.read(data_path + path)
+    return x
+
+def normalize(coeff):
+    coeff += np.abs(coeff.min())
+    coeff /= coeff.max()
+    return coeff
+
+def get_features(path):
+    wav_data = read_wav(path)
+    return normalize(mfcc(wav_data))
+
+def get_label(path):
+    if path.startswith(wakeword):
+        return 1
+    return 0
+
+def get_features_and_labels(paths):
+    X = []
+    y = []
+    for path in paths:
+        X.append(get_features(path))
+        y.append(get_label(path))
+    return X, y
+
+
+def add_noise(noise_ratio=.5):
+    pass
 
 if __name__ == "__main__":
-    preprocess()
+    train_paths, test_paths, val_paths = get_data_paths()
+    X_train, y_train = get_features_and_labels(train_paths)
+    X_test, y_test = get_features_and_labels(test_paths)
+    X_val, y_val = get_features_and_labels(val_paths)
+
+    pickle.dump((X_train, y_train), open("data/train.p", "wb"))
+    pickle.dump((X_test, y_test), open("data/test.p", "wb"))
+    pickle.dump((X_val, y_val), open("data/val.p", "wb"))
