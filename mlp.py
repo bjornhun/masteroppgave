@@ -1,3 +1,5 @@
+# MLP based on the following example: https://github.com/soerendip/Tensorflow-binary-classification/blob/master/Tensorflow-binary-classification-model.ipynb
+
 import tensorflow as tf
 import numpy as np
 import pickle
