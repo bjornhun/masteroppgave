@@ -10,10 +10,10 @@ n_epochs = 200
 batch_size = 128
 
 # Network Parameters
-n_inputs = 13 # MNIST data input (img shape: 28*28)
-timesteps = 99 # timesteps
-n_hidden = 128 # hidden layer num of features
-n_classes = 2 # MNIST total classes (0-9 digits)
+n_inputs = 13
+timesteps = 99
+n_hidden = 128
+n_classes = 2
 
 # tf Graph input
 X = tf.placeholder("float", [None, timesteps, n_inputs])
