@@ -75,8 +75,12 @@ def get_features(path):
 
 def get_label(path):
     if path.startswith(wakeword):
-        return 1
-    return 0
+        return 0
+    return 1
+
+def get_one_hot(y):
+    n_classes = max(y) + 1
+    return np.eye(n_classes)[np.array(y).reshape(-1)]
 
 def get_features_and_labels(paths):
     X = []
@@ -84,8 +88,7 @@ def get_features_and_labels(paths):
     for path in paths:
         X.append(get_features(path))
         y.append(get_label(path))
-    return X, y
-
+    return np.asarray(X), get_one_hot(y)
 
 def add_noise(noise_ratio=.5):
     pass
