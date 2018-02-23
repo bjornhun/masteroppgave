@@ -95,6 +95,9 @@ def add_noise(noise_ratio=.5):
 
 if __name__ == "__main__":
     train_paths, test_paths, val_paths = get_data_paths()
+    random.shuffle(train_paths)
+    random.shuffle(test_paths)
+    random.shuffle(val_paths)
     X_train, y_train = get_features_and_labels(train_paths)
     X_test, y_test = get_features_and_labels(test_paths)
     X_val, y_val = get_features_and_labels(val_paths)
