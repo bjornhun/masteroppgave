@@ -6,7 +6,7 @@ import pickle
 
 # Training Parameters
 learning_rate = 0.001
-n_epochs = 10000
+n_epochs = 200
 batch_size = 128
 
 # Network Parameters
