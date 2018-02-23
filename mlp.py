@@ -15,7 +15,7 @@ n_hidden_3 = 512 # 2nd layer number of features
 n_classes = 2 # Number of classes to predict
 
 X_train, y_train = pickle.load(open("data/train.p", "rb"))
-X_test, Y_test = pickle.load(open("data/test.p", "rb"))
+X_test, y_test = pickle.load(open("data/test.p", "rb"))
 X_val, y_val = pickle.load(open("data/val.p", "rb"))
 
 n_train = len(X_train)
@@ -42,8 +42,8 @@ def multilayer_perceptron(X, weights, biases):
     layer_3 = tf.add(tf.matmul(layer_2, weights['h3']), biases['b3'])
     layer_3 = tf.nn.relu(layer_3)
     # Output layer with linear activation
-    out_layer = tf.matmul(layer_3, weights['out']) + biases['out']
-    return out_layer
+    logits = tf.matmul(layer_3, weights['out']) + biases['out']
+    return logits
 
 # Store layers weight & bias
 weights = {
@@ -61,14 +61,18 @@ biases = {
 }
 
 # Construct model
-pred = multilayer_perceptron(X, weights, biases)
+logits = multilayer_perceptron(X, weights, biases)
 
 # Define loss and optimizer
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Initializing the variables
 init = tf.global_variables_initializer()
+
+# Define accuracy
+correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
 # Launch the graph
 
@@ -77,28 +81,19 @@ with tf.Session() as sess:
     # Training cycle
     for epoch in range(n_epochs):
         avg_cost = 0.
-        total_batch = int(len(X_train)/batch_size)
-        X_batches = np.array_split(X_train, total_batch)
-        Y_batches = np.array_split(y_train, total_batch)
+        n_batches = int(len(X_train)/batch_size)
+        X_batches = np.array_split(X_train, n_batches)
+        Y_batches = np.array_split(y_train, n_batches)
         # Loop over all batches
-        for i in range(total_batch):
+        for i in range(n_batches):
             batch_x, batch_y = X_batches[i], Y_batches[i]
             # Run optimization op (backprop) and cost op (to get loss value)
             _, c = sess.run([optimizer, cost], feed_dict={X: batch_x,
                                                           y: batch_y})
             # Compute average loss
-            avg_cost += c / total_batch
+            avg_cost += c / n_batches
         # Display logs per epoch step
-        print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
-        # Test model
-        correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-        # Calculate accuracy
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-        print("Accuracy:", accuracy.eval({X: X_val, y: y_val}))
+        print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost), "Val accuracy:", accuracy.eval({X: X_val, y: y_val}))
     print("Optimization Finished!")
 
-    # Test model
-    correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-    # Calculate accuracy
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-    print("Accuracy:", accuracy.eval({X: X_test, y: Y_test}))
+    print("Test accuracy:", accuracy.eval({X: X_test, y: y_test}))
