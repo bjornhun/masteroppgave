@@ -10,7 +10,7 @@ n_epochs = 100
 batch_size = 100
 
 # Network Parameters
-n_inputs = 13*99 # Number of feature
+n_inputs = 26*99 # Number of feature
 n_hidden_1 = 512 # 1st layer number of features
 n_hidden_2 = 512 # 2nd layer number of features
 n_hidden_3 = 512 # 2nd layer number of features

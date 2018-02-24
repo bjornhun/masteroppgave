@@ -7,6 +7,7 @@ import pickle
 
 wakeword = "seven"
 data_path = "data/"
+n_mfccs = 26
 
 def get_positives(wakeword):
     return [(wakeword + "/" + p) for p in os.listdir(data_path + wakeword)]
@@ -71,7 +72,7 @@ def normalize(coeff):
 
 def get_features(path):
     wav_data = read_wav(path)
-    return normalize(mfcc(wav_data))
+    return normalize(mfcc(wav_data, numcep=n_mfccs))
 
 def get_label(path):
     if path.startswith(wakeword):

@@ -10,7 +10,7 @@ n_epochs = 200
 batch_size = 128
 
 # Network Parameters
-n_inputs = 13
+n_inputs = 26
 timesteps = 99
 n_hidden = 128
 n_classes = 2
