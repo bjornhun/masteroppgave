@@ -16,14 +16,15 @@ n_hidden_2 = 512 # 2nd layer number of features
 n_hidden_3 = 512 # 2nd layer number of features
 n_classes = 2 # Number of classes to predict
 
+# Read data
 X_train, y_train = pickle.load(open("data/train.p", "rb"))
 X_test, y_test = pickle.load(open("data/test.p", "rb"))
 X_val, y_val = pickle.load(open("data/val.p", "rb"))
 
+# Reshape data
 n_train = len(X_train)
 n_test = len(X_test)
 n_val = len(X_val)
-
 X_train = X_train.reshape(n_train, n_inputs)
 X_test = X_test.reshape(n_test, n_inputs)
 X_val = X_val.reshape(n_val, n_inputs)
