@@ -7,6 +7,7 @@ import pickle
 
 wakeword = "seven"
 data_path = "data/"
+noise_path = "data/_background_noise_/"
 n_mfccs = 26
 
 def get_positives(wakeword):
@@ -59,10 +60,15 @@ def set_length(x, cutoff):
         zeros = cutoff - num_samples
         return np.append(x, [0]*zeros)
 
-def read_wav(path):
+def read_wav(path, add_noise):
     fs, x = wavfile.read(data_path + path)
     if len(x) != fs:
         x = set_length(x, fs)
+    if add_noise:
+        noise_file = random.choice(os.listdir(noise_path))
+        fs, noise = wavfile.read(noise_path + noise_file)
+        start = random.randint(0, len(noise)-fs)
+        x = np.add(x, noise[start:start+fs])
     return x
 
 def normalize(coeff):
@@ -70,8 +76,8 @@ def normalize(coeff):
     coeff /= coeff.max()
     return coeff
 
-def get_features(path):
-    wav_data = read_wav(path)
+def get_features(path, add_noise):
+    wav_data = read_wav(path, add_noise)
     return normalize(mfcc(wav_data, numcep=n_mfccs))
 
 def get_label(path):
@@ -83,13 +89,16 @@ def get_one_hot(y):
     n_classes = max(y) + 1
     return np.eye(n_classes)[np.array(y).reshape(-1)]
 
-def get_features_and_labels(paths):
+def get_features_and_labels(paths, one_hot=True, noise_ratio=.0):
     X = []
     y = []
     for path in paths:
-        X.append(get_features(path))
+        add_noise = (random.random() < noise_ratio)
+        X.append(get_features(path, add_noise))
         y.append(get_label(path))
-    return np.asarray(X), get_one_hot(y)
+    if one_hot:
+        y = get_one_hot(y)
+    return np.asarray(X), y
 
 def add_noise(noise_ratio=.5):
     pass
