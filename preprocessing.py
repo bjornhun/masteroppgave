@@ -11,7 +11,9 @@ noise_path = "data/_background_noise_/"
 n_mfccs = 26
 
 def get_positives(wakeword):
-    return [(wakeword + "/" + p) for p in os.listdir(data_path + wakeword)]
+    positivies = [(wakeword + "/" + p) for p in os.listdir(data_path + wakeword)]
+    random.shuffle(positivies)
+    return positivies
 
 def get_negatives(n_negatives):
     classes = [e for e in os.listdir(data_path) if os.path.isdir(data_path + e) and not e.startswith("_") and e!=wakeword]
@@ -20,6 +22,7 @@ def get_negatives(n_negatives):
     negatives = []
     for c in classes:
         [negatives.append(c + "/" + n) for n in random.sample(os.listdir(data_path + c), n_negatives_per_class)]
+    random.shuffle(negatives)
     return negatives
 
 def get_subsample(positives, negatives, n_pos, n_neg):
@@ -40,7 +43,7 @@ def train_test_val_split(positives, negatives, test_ratio, val_ratio):
     n_test_neg = int(len(negatives) * test_ratio)
     n_val_neg = int(len(negatives) * val_ratio)
     n_train_neg = len(negatives) - (n_test_neg + n_val_neg)
-
+    
     positives, negatives, test = get_subsample(positives, negatives, n_test_pos, n_test_neg)
     positives, negatives, val = get_subsample(positives, negatives, n_val_pos, n_val_neg)
     positives, negatives, train = get_subsample(positives, negatives, n_train_pos, n_train_neg)
