@@ -5,15 +5,19 @@ from python_speech_features import mfcc
 import numpy as np
 import pickle
 
+path = os.path.dirname(os.path.realpath(__file__)) + "\\"
 wakeword = "seven"
-data_path = "data/"
-noise_path = "data/_background_noise_/"
+data_path = path + "data\\"
+noise_path = data_path + "_background_noise_\\"
+
 n_mfccs = 26
+noise_ratio = 0.25
+one_hot = True
 
 def get_positives(wakeword):
-    positivies = [(wakeword + "/" + p) for p in os.listdir(data_path + wakeword)]
-    random.shuffle(positivies)
-    return positivies
+    positives = [(wakeword + "\\" + p) for p in os.listdir(data_path + wakeword)]
+    random.shuffle(positives)
+    return positives
 
 def get_negatives(n_negatives):
     classes = [e for e in os.listdir(data_path) if os.path.isdir(data_path + e) and not e.startswith("_") and e!=wakeword]
@@ -21,7 +25,7 @@ def get_negatives(n_negatives):
     n_negatives_per_class = int(n_negatives/n_classes)
     negatives = []
     for c in classes:
-        [negatives.append(c + "/" + n) for n in random.sample(os.listdir(data_path + c), n_negatives_per_class)]
+        [negatives.append(c + "\\" + n) for n in random.sample(os.listdir(data_path + c), n_negatives_per_class)]
     random.shuffle(negatives)
     return negatives
 
@@ -92,7 +96,7 @@ def get_one_hot(y):
     n_classes = max(y) + 1
     return np.eye(n_classes)[np.array(y).reshape(-1)]
 
-def get_features_and_labels(paths, one_hot=True, noise_ratio=.0):
+def get_features_and_labels(paths):
     X = []
     y = []
     for path in paths:
@@ -103,9 +107,6 @@ def get_features_and_labels(paths, one_hot=True, noise_ratio=.0):
         y = get_one_hot(y)
     return np.asarray(X), y
 
-def add_noise(noise_ratio=.5):
-    pass
-
 if __name__ == "__main__":
     train_paths, test_paths, val_paths = get_data_paths()
     random.shuffle(train_paths)
@@ -115,6 +116,6 @@ if __name__ == "__main__":
     X_test, y_test = get_features_and_labels(test_paths)
     X_val, y_val = get_features_and_labels(val_paths)
 
-    pickle.dump((X_train, y_train), open("data/train.p", "wb"))
-    pickle.dump((X_test, y_test), open("data/test.p", "wb"))
-    pickle.dump((X_val, y_val), open("data/val.p", "wb"))
+    pickle.dump((X_train, y_train), open(data_path + "train.p", "wb"))
+    pickle.dump((X_test, y_test), open(data_path + "test.p", "wb"))
+    pickle.dump((X_val, y_val), open(data_path + "val.p", "wb"))
