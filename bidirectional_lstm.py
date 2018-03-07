@@ -1,8 +1,12 @@
 # Bidirectional LSTM based on the following example: https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/3_NeuralNetworks/bidirectional_rnn.py
- 
+# 20 epochs, 25 % noise: val acc 85.98 %, test acc 86.41 %
+
 import tensorflow as tf
 import numpy as np
 import pickle
+import os
+
+data_path = os.path.dirname(os.path.realpath(__file__)) + "\\data\\"
 
 # Training Parameters
 learning_rate = 0.001
@@ -20,9 +24,9 @@ X = tf.placeholder("float", [None, timesteps, n_inputs])
 y = tf.placeholder("float", [None, n_classes])
 
 # Read data
-X_train, y_train = pickle.load(open("data/train.p", "rb"))
-X_test, y_test = pickle.load(open("data/test.p", "rb"))
-X_val, y_val = pickle.load(open("data/val.p", "rb"))
+X_train, y_train = pickle.load(open(data_path + "train.p", "rb"))
+X_test, y_test = pickle.load(open(data_path + "test.p", "rb"))
+X_val, y_val = pickle.load(open(data_path + "val.p", "rb"))
 
 # Define weights and biases
 weights = {
