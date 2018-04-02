@@ -129,7 +129,7 @@ if plot_preds == True:
                     "recording5": [363],
                     "recording6": [795, 1684],
                     "recording7": [1180],
-                    "concat_file": [200, 800, 1200, 1800],
+                    "concat_file": [200, 800],
                     }
 
         for fname in rec_dict.keys():
@@ -141,7 +141,7 @@ if plot_preds == True:
             init_state = np.random.uniform(low=-1.0, high=1.0, size=((n_layers, 1, n_neurons)))
 
             ww_times = rec_dict[fname]
-            
+
             probs=[]
             for i in range(0, len(recording)-9, 10):
                 init_state, wp = sess.run([states, wakeword_probs], feed_dict={X: [recording[i:i+10]], seq_length: 10, initial_state: init_state})
