@@ -10,8 +10,8 @@ import pyaudio
 import winsound
 
 data_path = os.path.dirname(os.path.realpath(__file__)) + "\\data\\"
-model_name = "three_layer_gru_10-90_var_len_random_initstate"
-train_model = True
+model_name = "one_layer_gru_10-90_var_len_random_state"
+train_model = False
 plot_preds = True
 record = False
 
@@ -69,7 +69,7 @@ stacked_rnn_outputs = tf.reshape(outputs, [-1, n_neurons])
 stacked_outputs = tf.layers.dense(stacked_rnn_outputs, n_outputs)
 outputs = tf.reshape(stacked_outputs, [-1, seq_length, n_outputs])
 logits = outputs[:,-1,:] # Used for optimization
-wakeword_probs = tf.nn.softmax(outputs) # Wake word probabilities for each timestep
+wakeword_probs = tf.nn.softmax(outputs)[0,:,0] # Wake word probabilities for each timestep
 
 # Optimize
 xentropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits)
@@ -89,14 +89,14 @@ saver = tf.train.Saver()
 if train_model == True:
     with tf.Session() as sess:
         init.run()
-        init_state = np.zeros((n_layers, batch_size, n_neurons))
-        test_state = np.zeros((n_layers, n_val, n_neurons))
-        val_state
+        test_state = np.random.uniform(low=-1.0, high=1.0, size=((n_layers, n_test, n_neurons)))
+        val_state = np.random.uniform(low=-1.0, high=1.0, size=((n_layers, n_val, n_neurons)))
         for epoch in range(n_epochs):
             avg_loss = 0.
             for i in range(n_batches):
+                init_state = np.random.uniform(low=-1.0, high=1.0, size=((n_layers, batch_size, n_neurons)))
                 X_batch, y_batch = X_batches[i], Y_batches[i]
-                _, c, init_state = sess.run([training_op, loss, states],
+                _, c = sess.run([training_op, loss],
                                             feed_dict={X: X_batch,
                                                        seq_length: n_timesteps,
                                                        y: y_batch,
@@ -105,17 +105,17 @@ if train_model == True:
 
             print("Epoch:", '%04d' % (epoch+1),
                   "loss=", "{:.9f}".format(avg_loss),
-                  "Val accuracy:", accuracy.eval({X: X_val[:batch_size],
-                                                  y: y_val[:batch_size],
+                  "Val accuracy:", accuracy.eval({X: X_val,
+                                                  y: y_val,
                                                   seq_length: n_timesteps,
-                                                  initial_state: init_state}))
+                                                  initial_state: val_state}))
 
         
         print("Optimization Finished!")
         print("Test accuracy:", accuracy.eval({X: X_test,
                                                y: y_test,
                                                seq_length: n_timesteps,
-                                               initial_state: val_state}))
+                                               initial_state: test_state}))
         save_path = saver.save(sess, "./models/" + model_name + ".ckpt")
 
 if plot_preds == True:
@@ -138,25 +138,25 @@ if plot_preds == True:
             fs, x = wavfile.read(fname + ".wav")
             recording = normalize(mfcc(x, numcep=26))
 
+            init_state = np.random.uniform(low=-1.0, high=1.0, size=((n_layers, 1, n_neurons)))
 
             ww_times = rec_dict[fname]
-
-            st = np.zeros((n_layers, 1, n_neurons))
-            st, wp = sess.run([states, wakeword_probs], feed_dict={X: [recording], seq_length: len(recording), initial_state: st})
-            probs = np.asarray(wp[0,:,0])
+            
+            probs=[]
+            for i in range(0, len(recording)-9, 10):
+                init_state, wp = sess.run([states, wakeword_probs], feed_dict={X: [recording[i:i+10]], seq_length: 10, initial_state: init_state})
+                for val in wp:
+                    probs.append(val)
+            probs = np.asarray(probs)
 
             threshold = 0.99
             detections = probs > threshold
 
             x = np.linspace(0, len(probs)-1, len(probs))
-
             plt.plot(x[detections], probs[detections], 'go')
-
             plt.plot(x, probs)
-
             for t in ww_times:
                 plt.axvline(x=t, color="red")
-
             plt.savefig("plots/" + model_name + "/" + fname)
             plt.clf()
 
@@ -173,7 +173,7 @@ if record == True:
             raw_speech = np.fromstring(data, dtype=np.int16)
             coeff = normalize(mfcc(x, numcep=26))
             st, wp = sess.run([states, wakeword_probs], feed_dict={X: [coeff], initial_state: st})
-            for val in wp[0,:,0]:
+            for val in wp:
                 probs.append(val)
 
             probs = np.asarray(probs[100:])
