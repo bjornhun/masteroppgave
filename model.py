@@ -6,14 +6,11 @@ from scipy.io import wavfile
 from python_speech_features import mfcc
 from preprocessing import normalize
 import matplotlib.pyplot as plt
-import pyaudio
-import winsound
 
 data_path = os.path.dirname(os.path.realpath(__file__)) + "\\data\\"
 model_name = "one_layer_gru_10-90_var_len_random_state"
 train_model = False
-plot_preds = True
-record = False
+plot_preds = False
 
 # Load data
 X_train, y_train = pickle.load(open(data_path + "train.p", "rb"))
@@ -159,34 +156,3 @@ if plot_preds == True:
                 plt.axvline(x=t, color="red")
             plt.savefig("plots/" + model_name + "/" + fname)
             plt.clf()
-
-if record == True:
-    with tf.Session() as sess:
-        saver.restore(sess, "./models/" + model_name + ".ckpt")
-        ww_in_prev = 0
-        probs = []
-        st = np.zeros((n_layers, 1, n_neurons))
-        while True:
-            p = pyaudio.PyAudio()
-            stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=16000)
-            data = stream.read(16000)
-            raw_speech = np.fromstring(data, dtype=np.int16)
-            coeff = normalize(mfcc(x, numcep=26))
-            st, wp = sess.run([states, wakeword_probs], feed_dict={X: [coeff], initial_state: st})
-            for val in wp:
-                probs.append(val)
-
-            probs = np.asarray(probs[100:])
-            threshold = 0.99
-            detections = probs > threshold
-            if ww_in_prev == 0:
-                if True in detections:
-                    print("Wake word detected #", count)
-                    winsound.Beep(1000, 300)
-                    ww_in_prev = 1
-                    count+=1
-            else:
-                ww_in_prev = 0 
-            stream.stop_stream()
-            stream.close()
-            p.terminate()
